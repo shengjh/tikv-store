@@ -5,8 +5,8 @@ import (
 	"github.com/tikv/client-go/config"
 	"github.com/tikv/client-go/rawkv"
 	"math"
-	. "rawkv-demo/storage"
-	. "rawkv-demo/storage/codec"
+	. "tikv-store/storage"
+	. "tikv-store/storage/codec"
 )
 
 type tikvStore struct {
@@ -76,7 +76,16 @@ func (s *tikvStore) Delete(key Key, timestamp uint64) error {
 }
 
 func (s *tikvStore) BatchDelete(keys []Key, timestamp uint64) error {
-	panic("implement me")
+	var key Key
+	var err error
+
+	for _, key = range keys{
+		err = s.Delete(key, timestamp)
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }
 
 func (s *tikvStore) Scan(start Key, end Key, limit uint32, timestamp uint64) ([]Key, []Value, error) {

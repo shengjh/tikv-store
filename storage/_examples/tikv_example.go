@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/tikv/client-go/config"
-	. "rawkv-demo/storage"
-	"rawkv-demo/storage/tikv"
+	. "tikv-store/storage"
+	"tikv-store/storage/tikv"
 )
 
 func main() {
