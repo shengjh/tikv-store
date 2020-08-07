@@ -27,9 +27,9 @@ func (s *tikvStore) Name() string {
 	return "TiKV storage"
 }
 
-func (s *tikvStore) Get(key Key, timestamp uint64) (Value, error) {
+func (s *tikvStore) Get(ctx context.Context, key Key, timestamp uint64) (Value, error) {
 	end := keyAddDelimiter(key)
-	keys, vals, err := s.client.Scan(context.TODO(), MvccEncode(key, timestamp), MvccEncode(end, math.MaxUint64), 1)
+	keys, vals, err := s.client.Scan(ctx, MvccEncode(key, timestamp), MvccEncode(end, math.MaxUint64), 1)
 	if err != nil {
 		return nil, err
 	}
@@ -39,28 +39,28 @@ func (s *tikvStore) Get(key Key, timestamp uint64) (Value, error) {
 	return vals[0], err
 }
 
-func (s *tikvStore) Set(key Key, v Value, timestamp uint64) error {
+func (s *tikvStore) Set(ctx context.Context, key Key, v Value, timestamp uint64) error {
 	codedKey := MvccEncode(key, timestamp)
-	err := s.client.Put(context.TODO(), codedKey, v)
+	err := s.client.Put(ctx, codedKey, v)
 	return err
 }
 
-func (s *tikvStore) BatchSet(keys []Key, v []Value, timestamp uint64) error {
+func (s *tikvStore) BatchSet(ctx context.Context, keys []Key, v []Value, timestamp uint64) error {
 	for i, key := range keys {
 		keys[i] = MvccEncode(key, timestamp)
 	}
-	err := s.client.BatchPut(context.TODO(), keys, v)
+	err := s.client.BatchPut(ctx, keys, v)
 	return err
 }
 
-func (s *tikvStore) BatchGet(keys []Key, timestamp uint64) ([]Value, error) {
+func (s *tikvStore) BatchGet(ctx context.Context, keys []Key, timestamp uint64) ([]Value, error) {
 	var key Key
 	var val Value
 	var err error
 	var vals []Value
 	// TODO: When batch size is too large, should use go routine and chain to multi get?
 	for _, key = range keys {
-		val, err = s.Get(key, timestamp)
+		val, err = s.Get(ctx, key, timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -69,18 +69,18 @@ func (s *tikvStore) BatchGet(keys []Key, timestamp uint64) ([]Value, error) {
 	return vals, err
 }
 
-func (s *tikvStore) Delete(key Key, timestamp uint64) error {
+func (s *tikvStore) Delete(ctx context.Context, key Key, timestamp uint64) error {
 	end := keyAddDelimiter(key)
-	err := s.client.DeleteRange(context.TODO(), MvccEncode(key, timestamp), MvccEncode(end, math.MaxUint64))
+	err := s.client.DeleteRange(ctx, MvccEncode(key, timestamp), MvccEncode(end, math.MaxUint64))
 	return err
 }
 
-func (s *tikvStore) BatchDelete(keys []Key, timestamp uint64) error {
+func (s *tikvStore) BatchDelete(ctx context.Context, keys []Key, timestamp uint64) error {
 	var key Key
 	var err error
 
 	for _, key = range keys{
-		err = s.Delete(key, timestamp)
+		err = s.Delete(ctx, key, timestamp)
 		if err != nil {
 			return err
 		}
@@ -88,11 +88,11 @@ func (s *tikvStore) BatchDelete(keys []Key, timestamp uint64) error {
 	return err
 }
 
-func (s *tikvStore) Scan(start Key, end Key, limit uint32, timestamp uint64) ([]Key, []Value, error) {
+func (s *tikvStore) Scan(ctx context.Context, start Key, end Key, limit uint32, timestamp uint64) ([]Key, []Value, error) {
 	panic("implement me")
 }
 
-func (s *tikvStore) ReverseScan(start Key, end Key, limit uint32, timestamp uint64) ([]Key, []Value, error) {
+func (s *tikvStore) ReverseScan(ctx context.Context, start Key, end Key, limit uint32, timestamp uint64) ([]Key, []Value, error) {
 	panic("implement me")
 }
 
