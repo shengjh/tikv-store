@@ -46,10 +46,11 @@ func (s *tikvStore) Set(ctx context.Context, key Key, v Value, timestamp uint64)
 }
 
 func (s *tikvStore) BatchSet(ctx context.Context, keys []Key, v []Value, timestamp uint64) error {
+	codedKeys := make([]Key, len(keys))
 	for i, key := range keys {
-		keys[i] = MvccEncode(key, timestamp)
+		codedKeys[i] = MvccEncode(key, timestamp)
 	}
-	err := s.client.BatchPut(ctx, keys, v)
+	err := s.client.BatchPut(ctx, codedKeys, v)
 	return err
 }
 
@@ -83,6 +84,47 @@ func (s *tikvStore) BatchDelete(ctx context.Context, keys []Key, timestamp uint6
 		err = s.Delete(ctx, key, timestamp)
 		if err != nil {
 			return err
+		}
+	}
+	return err
+}
+
+var batchSize = 5
+type batch struct {
+	keys     []Key
+	values   []Value
+}
+
+func (s *tikvStore) BatchDeleteMultiRoutine(ctx context.Context, keys []Key, timestamp uint64) error {
+	var key Key
+	var err error
+
+	keysLen := len(keys)
+	batches := make([]batch, (keysLen-1)/batchSize+ 1)
+
+	for i, key := range keys{
+		batchNum := i / batchSize
+		batches[batchNum].keys = append(batches[batchNum].keys, key)
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	ch := make(chan error, len(batches))
+	for _, batch := range batches {
+		batch1 := batch
+		go func() {
+			for _, key = range batch1.keys{
+				ch <- s.Delete(ctx, key, timestamp)
+			}
+		}()
+	}
+
+	for i := 0; i < keysLen; i++ {
+		if e := <-ch; e != nil {
+			cancel()
+			// catch the first error
+			if err == nil {
+				err = e
+			}
 		}
 	}
 	return err
