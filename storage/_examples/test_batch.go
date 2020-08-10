@@ -12,7 +12,7 @@ func main(){
 	// Create a tikv based storage
 	var err error
 	ctx := context.Background()
-	store, err := tikv.NewtikvStore([]string{"127.0.0.1:2379"}, config.Default())
+	store, err := tikv.NewtikvStore(ctx, []string{"127.0.0.1:2379"}, config.Default())
 	if err != nil {
 		panic(err.Error())
 	}

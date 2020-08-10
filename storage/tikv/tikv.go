@@ -13,8 +13,8 @@ type tikvStore struct {
 	client *rawkv.Client
 }
 
-func NewtikvStore(pdAddrs []string, conf config.Config) (*tikvStore, error) {
-	client, err := rawkv.NewClient(context.TODO(), pdAddrs, conf)
+func NewtikvStore(ctx context.Context, pdAddrs []string, conf config.Config) (*tikvStore, error) {
+	client, err := rawkv.NewClient(ctx, pdAddrs, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -141,4 +141,8 @@ func (s *tikvStore) ReverseScan(ctx context.Context, start Key, end Key, limit u
 func keyAddDelimiter(key Key) Key{
 	// TODO: decide delimiter byte, currently set 0x00
 	return append(key, byte(0x00))
+}
+
+func (s *tikvStore)Close() error{
+	return s.client.Close()
 }
