@@ -20,11 +20,11 @@ func main() {
 	}
 
 	// Set some key-value pair with different timestamp
-	key := Key("milvus")
-	store.Set(ctx, key, Value("milvus_1"), 1)
-	store.Set(ctx, key, Value("milvus_2"), 2)
-	store.Set(ctx, key, Value("milvus_3"), 3)
-	store.Set(ctx, key, Value("milvus_4"), 4)
+	key := Key("key")
+	store.Set(ctx, key, Value("value_1"), 1)
+	store.Set(ctx, key, Value("value_2"), 2)
+	store.Set(ctx, key, Value("value_3"), 3)
+	store.Set(ctx, key, Value("value_4"), 4)
 
 	search := func(key Key, timestamp uint64) {
 		v, err := store.Get(ctx, key, timestamp)
@@ -39,8 +39,8 @@ func main() {
 	search(key, 10)
 
 	// Batch set key-value pairs with same timestamp
-	keys := []Key{Key("milvus"), Key("milvus-foo")}
-	values := []Value{Value("milvus_5"), Value("milvus_foo_5")}
+	keys := []Key{Key("key"), Key("key1")}
+	values := []Value{Value("value_5"), Value("value1_5")}
 	store.BatchSet(ctx, keys, values, 5)
 
 	batchSearch := func(keys []Key, timestamp uint64) {
@@ -54,17 +54,17 @@ func main() {
 	}
 
 	// Batch get keys
-	keys = []Key{Key("milvus"), Key("milvus-foo")}
+	keys = []Key{Key("key"), Key("key1")}
 	batchSearch(keys, 5)
 
 	//Delete outdated key-value pairs for a key
-	store.Set(ctx, key, Value("milvus_6"), 6)
-	store.Set(ctx, key, Value("milvus_7"), 7)
+	store.Set(ctx, key, Value("value_6"), 6)
+	store.Set(ctx, key, Value("value_7"), 7)
 	err = store.Delete(ctx, key, 5)
 	search(key, 5)
 
 	// use BatchDelete all keys
-	keys = []Key{Key("milvus"), Key("milvus_foo")}
+	keys = []Key{Key("key"), Key("key1")}
 	store.BatchDelete(ctx, keys , math.MaxUint64)
 	batchSearch(keys, math.MaxUint64)
 }
