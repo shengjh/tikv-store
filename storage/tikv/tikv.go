@@ -89,7 +89,7 @@ func (s *tikvStore) BatchDelete(ctx context.Context, keys []Key, timestamp uint6
 	return err
 }
 
-var batchSize = 5
+var batchSize = 100
 type batch struct {
 	keys     []Key
 	values   []Value
