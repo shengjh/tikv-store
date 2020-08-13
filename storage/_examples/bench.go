@@ -37,13 +37,17 @@ func main() {
 		testValues = append(testValues, []byte(value))
 	}
 
-	fmt.Printf("Prepared test data %d kv pairs, total size %dKB \n", len(testKeys), size / 1024)
-
 	// Set kv data
-	err = store.BatchSet(ctx, testKeys, testValues, 1)
-	if err != nil {
-		panic(err.Error())
+	allTs := []uint64{1, 2, 3, 4, 5, 6, 7, 8}
+	now := time.Now()
+	for _, ts:= range allTs {
+		err = store.BatchSet(ctx, testKeys, testValues, ts)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
+	fmt.Printf("Prepared test data %d kv pairs, total size %dKB,", len(testKeys) * len(allTs), size * len(allTs)/1024)
+	fmt.Printf(" cost %s\n", time.Since(now))
 
 	// Bench get
 	maxTime := time.Duration(0)
@@ -54,7 +58,7 @@ func main() {
 
 	for _, key := range testKeys {
 		now := time.Now()
-		_, err = store.Get(ctx, key, 1)
+		_, err = store.Get(ctx, key, 2)
 		cost := time.Since(now)
 		if maxTime < cost {
 			maxTime = cost
@@ -68,10 +72,11 @@ func main() {
 	fmt.Printf("Max cost %s, key %s \n", maxTime, keyMax)
 	fmt.Printf("Min cost %s, key %s \n", minTime, keyMin)
 
-
 	// Delete test data
+	now = time.Now()
 	err = store.BatchDeleteMultiRoutine(ctx, testKeys, math.MaxUint64)
-	if err != nil{
+	if err != nil {
 		panic(err.Error())
 	}
+	fmt.Printf("Batch delete all test data cost %s", time.Since(now))
 }

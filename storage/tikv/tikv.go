@@ -72,7 +72,7 @@ func (s *tikvStore) BatchGet(ctx context.Context, keys []Key, timestamp uint64) 
 
 func (s *tikvStore) Delete(ctx context.Context, key Key, timestamp uint64) error {
 	end := keyAddDelimiter(key)
-	err := s.client.DeleteRange(ctx, MvccEncode(key, timestamp), MvccEncode(end, math.MaxUint64))
+	err := s.client.DeleteRange(ctx, MvccEncode(key, timestamp), MvccEncode(end, uint64(0)))
 	return err
 }
 
